@@ -1,26 +1,19 @@
 return if skip_unsupported_platform
 
-case node['platform']
-when "ubuntu"
-  # add the typesafe apt repository
-  apt_repository "typesafe" do
-    uri "http://apt.typesafe.com/"
-    components ["main"]
-    key "typesafe-repo-public.asc"
-  end
+sbt_jar_filename = File.basename(node['sbt']['download_url'])
+sbt_install_path = "#{node['sbt']['install_path']}/#{node['sbt']['install_dir']}"
 
-  package "sbt" do
-    package_name node['sbt']['package']
-  end
-when "centos", "redhat"
-  yum_repository "typesafe" do
-    repo_name "typesafe"
-    description "Typesafe Repository"
-    url "http://rpm.typesafe.com/"
-    action :add
-  end
+directory sbt_install_path do
+  mode "0755"
+end
 
-  package "sbt" do
-    package_name node['sbt']['package']
-  end
+remote_file sbt_jar_filename do
+  source node['sbt']['download_url']
+  path "#{sbt_install_path}/#{sbt_jar_filename}"
+  mode "0755"
+end
+
+template "/usr/bin/sbt" do
+  source "sbt.sh.erb"
+  mode "0755"
 end
